@@ -13,5 +13,5 @@ COPY . .
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Запускаем приложение
-CMD ["uvicorn", "app:app", "--host", "127.0.0.1", "--port", "8000"]
+# Запускаем приложение 
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
