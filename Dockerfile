@@ -1,17 +1,22 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
-# Устанавливаем зависимости
+# Устанавливаем системные зависимости
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем requirements и устанавливаем зависимости
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код
+# Копируем весь код проекта
 COPY . .
 
 # Создаем пользователя для безопасности
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Запускаем приложение 
-CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Команда для запуска app.py
+CMD ["python", "app.py"]

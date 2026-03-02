@@ -18,7 +18,7 @@ ___
 
 + создайте внутри рабочего репозитория файл **.env** с вашим ключем API
 ```bash
-echo "API_KEY=ваш_ключ_API" > .env
+echo "API_KEY=ваш_ключ_exchangerate-api" '\n'"TELEGRAM_API_KEY=ваш_telegram_ключ" > .env
 ```
 
 + установите все зависимости из файла **requirements.txt**
