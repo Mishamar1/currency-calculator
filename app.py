@@ -2,7 +2,13 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from typing import Optional, List
+from telegrambot import main as run_bot
+import multiprocessing
 import uvicorn
+import time
+import sys
+
+
 
 from currency_client import CurrencyClient
 
@@ -64,13 +70,24 @@ async def read_root():
             -H "Content-Type: application/json" \\
             -d '{"amount": 100, "from_currency": "USD", "to_currency": "EUR"}'
     
-    Поддерживаемые валюты: USD, EUR, RUB, JPY, GBP, CNY, CHF
+    Поддерживаемые валюты: USD, AED, AFN, ALL, AMD, ANG, AOA, ARS, AUD, AWG, AZN, BAM, BBD, BDT, BGN, 
+                           BHD, BIF, BMD, BND, BOB, BRL, BSD, BTN, BWP, BYN, BZD, CAD, CDF, CHF, CLF, 
+                           CLP, CNH, CNY, COP, CRC, CUP, CVE, CZK, DJF, DKK, DOP, DZD, EGP, ERN, ETB, 
+                           EUR, FJD, FKP, FOK, GBP, GEL, GGP, GHS, GIP, GMD, GNF, GTQ, GYD, HKD, HNL, 
+                           HRK, HTG, HUF, IDR, ILS, IMP, INR, IQD, IRR, ISK, JEP, JMD, JOD, JPY, KES, 
+                           KGS, KHR, KID, KMF, KRW, KWD, KYD, KZT, LAK, LBP, LKR, LRD, LSL, LYD, MAD, 
+                           MDL, MGA, MKD, MMK, MNT, MOP, MRU, MUR, MVR, MWK, MXN, MYR, MZN, NAD, NGN, 
+                           NIO, NOK, NPR, NZD, OMR, PAB, PEN, PGK, PHP, PKR, PLN, PYG, QAR, RON, RSD, 
+                           RUB, RWF, SAR, SBD, SCR, SDG, SEK, SGD, SHP, SLE, SLL, SOS, SRD, SSP, STN, 
+                           SYP, SZL, THB, TJS, TMT, TND, TOP, TRY, TTD, TVD, TWD, TZS, UAH, UGX, UYU, 
+                           UZS, VES, VND, VUV, WST, XAF, XCD, XCG, XDR, XOF, XPF, YER, ZAR, ZMW, ZWG, 
+                           ZWL
     """
 
 @app.get("/currencies")
 async def get_currencies():
     """Получить список поддерживаемых валют"""
-    return {"currencies": client.get_supported_currencies()}
+    return {"currencies": client.check_supported_currency()}
 
 @app.get("/rates/{base_currency}")
 async def get_exchange_rates(
@@ -131,5 +148,19 @@ async def health_check():
     """Проверка здоровья сервиса"""
     return {"status": "healthy", "service": "currency-converter"}
 
+def run_api():
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=False)
+
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    print("Запуск Telegram бота в фоне...")
+    bot_process = multiprocessing.Process(target=run_bot, daemon=True)
+    bot_process.start()
+    
+    print("Запуск FastAPI сервера...")
+    try:
+        run_api()
+    except KeyboardInterrupt:
+        print("\nОстановка сервера...")
+        bot_process.terminate()
+        bot_process.join()
+        sys.exit(0)
